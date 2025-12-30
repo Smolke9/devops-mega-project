@@ -16,9 +16,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                  docker build -t $IMAGE_NAME .
-                '''
+                dir('app') {
+                    sh 'docker build -t $IMAGE_NAME .'
+                }
             }
         }
 
@@ -31,10 +31,12 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh '''
-                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push $IMAGE_NAME
-                    '''
+                    dir('app') {
+                        sh '''
+                          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                          docker push $IMAGE_NAME
+                        '''
+                    }
                 }
             }
         }
