@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         IMAGE_NAME = "surajmolke/mega-app"
-        DOCKER_CREDS = credentials('dockerhub-creds')
     }
 
     stages {
@@ -18,24 +17,25 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t $IMAGE_NAME .
+                  docker build -t $IMAGE_NAME .
                 '''
             }
         }
 
-        stage('Docker Login') {
+        stage('Docker Login & Push') {
             steps {
-                sh '''
-                echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin
-                '''
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                sh '''
-                docker push $IMAGE_NAME
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                      docker push $IMAGE_NAME
+                    '''
+                }
             }
         }
     }
